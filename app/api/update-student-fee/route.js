@@ -1,5 +1,6 @@
 export const runtime = 'nodejs';
 import { adminDb } from "@/lib/firebaseAdmin";
+import admin from "firebase-admin";
 import { z } from 'zod';
 
 // Input validation schema
@@ -118,15 +119,12 @@ export async function POST(request) {
       );
     }
 
-    // Verify token (admin initialized via lib/firebaseAdmin)
-    const decodedToken = await (await import('firebase-admin')).default.auth().verifyIdToken(idToken);
+    // Verify token using the existing Firebase Admin SDK
+    const decodedToken = await admin.auth().verifyIdToken(idToken);
     console.log('Fee update - Token verified for user:', decodedToken.email);
 
     // Check admin role in Firestore
-    const userDoc = await (await import('firebase-admin')).default.firestore()
-      .collection('users')
-      .doc(decodedToken.uid)
-      .get();
+    const userDoc = await adminDb.collection('users').doc(decodedToken.uid).get();
     
     if (!userDoc.exists) {
       return new Response(

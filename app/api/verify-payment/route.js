@@ -1,7 +1,8 @@
 import crypto from 'crypto';
 import { withAuth, withRateLimit, validateInput } from "@/lib/apiAuth";
-import { z } from 'zod';
+import { adminDb } from "@/lib/firebaseAdmin";
 import admin from 'firebase-admin';
+import { z } from 'zod';
 
 // Input validation schema
 const verifyPaymentSchema = z.object({
@@ -40,8 +41,7 @@ async function verifyPaymentHandler(request) {
 
     // Update student's payment record in Firestore (Admin SDK)
     try {
-      const db = admin.firestore();
-      const docRef = db.collection('students').doc(studentId);
+      const docRef = adminDb.collection('students').doc(studentId);
       const snap = await docRef.get();
       if (!snap.exists) {
         return new Response(

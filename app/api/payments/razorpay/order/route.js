@@ -1,7 +1,8 @@
 export const runtime = "nodejs";
 
 import Razorpay from "razorpay";
-import { withAdminAuth, withRateLimit, validateInput } from "@/lib/apiAuth";
+import { adminDb } from "@/lib/firebaseAdmin";
+import admin from "firebase-admin";
 import { z } from 'zod';
 
 // Input validation schema
@@ -65,18 +66,12 @@ export async function POST(request) {
       );
     }
 
-    // Import shared Firebase Admin instance
-    const { default: admin } = await import('@/lib/firebaseAdmin');
-
-    // Verify token
+    // Verify token using the existing Firebase Admin SDK
     const decodedToken = await admin.auth().verifyIdToken(idToken);
     console.log('Token verified for user:', decodedToken.email);
 
     // Check admin role in Firestore
-    const userDoc = await admin.firestore()
-      .collection('users')
-      .doc(decodedToken.uid)
-      .get();
+    const userDoc = await adminDb.collection('users').doc(decodedToken.uid).get();
     
     if (!userDoc.exists) {
       return new Response(
